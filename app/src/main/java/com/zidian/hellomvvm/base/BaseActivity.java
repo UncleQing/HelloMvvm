@@ -4,47 +4,40 @@ import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.zidian.hellomvvm.utils.ToastUtils;
-import com.zidian.hellomvvm.utils.dialog.BaseDialogFragment;
-import com.zidian.hellomvvm.utils.dialog.DialogFragmentHelper;
-
-import static com.zidian.hellomvvm.utils.dialog.DialogFragmentHelper.PROGRESS_TAG;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 /**
  * @Author: UncleQing
  * @CreateDate: 2020/4/19
  * @Description: This is BaseActivity
  */
-public abstract class BaseActivity extends AppCompatActivity {
-    private BaseDialogFragment loadingDialog;   //加载进度条弹框
+public abstract class BaseActivity<VBD extends ViewDataBinding, VM extends ViewModel> extends AppCompatActivity {
+    protected VBD mDataBinding;
+    protected VM mViewModel;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(getLayoutId());
+        mViewModel = initViewModel();
+        mDataBinding = DataBindingUtil.setContentView(this, getLayoutId());
+        mDataBinding.setLifecycleOwner(this);
+        bindingVariable(mDataBinding);
         afterOnCreate();
     }
 
+    protected abstract VM initViewModel();
+
     protected abstract int getLayoutId();
+
+    protected abstract void bindingVariable(VBD mDataBinding);
 
     protected abstract void afterOnCreate();
 
-    public void showLoading() {
-        if (loadingDialog == null) {
-            loadingDialog = DialogFragmentHelper.showProgress(getSupportFragmentManager(), null, false);
-        } else {
-            loadingDialog.show(getSupportFragmentManager(), PROGRESS_TAG);
-        }
+    public <T extends ViewModel> T createViewModel(Class<T> cls) {
+        return new ViewModelProvider(this).get(cls);
     }
 
-    public void hideLoading() {
-        if (loadingDialog != null && loadingDialog.isVisible()) {
-            loadingDialog.dismissAllowingStateLoss();
-        }
-    }
-
-    public void showToast(String msg) {
-        ToastUtils.showToast(this, msg);
-    }
 }
